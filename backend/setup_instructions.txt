@@ -1,0 +1,11 @@
+brew install sqlite
+
+sqlite3 database.sql
+create table flights(
+origin varchar(10),
+destination varchar(10),
+passengers integer,
+flights integer,
+month integer,
+year integer);
+    
