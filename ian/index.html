@@ -31,7 +31,6 @@ circle {
     <script type="text/javascript">
 
 var po = org.polymaps;
-
 // Create the map object, add it to #map…
 var map = po.map()
     .container(d3.select("#map").append("svg:svg").node())
@@ -54,6 +53,7 @@ var start_id = 1,
     end_id = 2;
 
 draw(start_id, end_id);
+draw_shady();
 setInterval(poll, 50);
 
 function poll() {
@@ -61,6 +61,33 @@ function poll() {
   end_id += 1;
 
   draw(start_id, end_id);
+}
+
+function draw_shady() {
+  d3.json("http://localhost:8080/shady", function(data) {
+    console.log(data);
+    var points = data,
+        point,
+        layer = d3.select("#map svg"),
+        loc;
+
+    layer.selectAll("circle.node")
+        .data(points)
+      .enter().append("svg:circle")
+        .attr("r", 4)
+        .attr("transform", transform)
+        .style("fill", "red");
+
+    function transform(d) {
+      lat_lon = d.lat_lon;
+      loc = map.locationPoint({lat: lat_lon[0], lon: lat_lon[1]});
+      return "translate(" + loc.x + "," + loc.y + ")";
+    }
+
+    map.on("move", function() {
+      layer.selectAll("circle").attr("transform", transform);
+    });
+  })
 }
 
 function draw(start_id, end_id) {
@@ -76,15 +103,33 @@ function draw(start_id, end_id) {
       .enter().append("svg:circle")
         .attr("r", 4)
         .attr("transform", transform)
+        .style("fill", neighborhood_to_color)
       .transition()
-        .duration(10000)
+        .duration(3000)
         .attr("r", 4)
-        .style("opacity", 1)
-        .remove();
+        .style("opacity", 1);
+        // .remove();
+
+    layer.selectAll("circle.node")
+        .data(points)
+      .exit().transition()
+        .duration(3000)
+        .style("opacity", 1e-6)
+        .remove()
 
     function transform(d) {
-      loc = map.locationPoint({lat: d[0], lon: d[1]});
+      lat_lon = d.lat_lon;
+      loc = map.locationPoint({lat: lat_lon[0], lon: lat_lon[1]});
       return "translate(" + loc.x + "," + loc.y + ")";
+    }
+
+    function neighborhood_to_color(d) {
+      origin = d.orig;
+      destination = d.dest;
+      if (destination == "Civic Center/Tenderloin" || origin == "Civic Center/Tenderloin") {
+        return "red";
+      }
+      return "#EDF8B1";
     }
 
     map.on("move", function() {
