@@ -16,3 +16,9 @@ time timestamp,
 lat numeric(10,5),
 lng numeric(10,5)
 );
+create table hoods(
+trip_id integer,
+origin varchar(25),
+destination varchar(25)
+);
+
